@@ -308,34 +308,6 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                         for n, writer in enumerate(writers):
                             writer_feedback.append((writers[n], {'id':'Your claim', 'text':both_hypotheses[n]}))
                             writer_feedback.append((writers[n], {'id':'Other claim', 'text':both_hypotheses[(n+1)%2]}))
-                        # writer_feedback.append((writers[0], {'id':'Your claim', 'text':hypothesis0}))
-                        # writer_feedback.append((writers[0], {'id':'Other claim', 'text':hypothesis1}))
-                        # writer_feedback.append((writers[1], {'id':'Your claim', 'text':hypothesis1}))
-                        # writer_feedback.append((writers[1], {'id':'Other claim', 'text':hypothesis0}))
-                    
-                    # If rankers never agree, inform them of that
-                    # if agrm_rate == 0:
-                    #     for evaluator in evaluators:
-                    #         evaluator_feedback.append((evaluator, eval_nobonus_message))
-
-                    # # If a writer got not bonuses, just inform them of that
-                    # if w0_rank == 0:
-                    #     writer_feedback.append((writers[0], writer_nobonus_message))
-                    # elif w1_rank == 0:
-                    #     writer_feedback.append((writers[1], writer_nobonus_message))
-                    # else:
-                    #     pass
-
-                    # Show rankers partner's justifications
-                    # and show writer's both sets of justifications 
-                    # if len(eval1_justifications) != 0:
-                    #     evaluator_feedback.append((evaluators[1], {'id':'Justifications from other evaluator', 'text': "\n"+"\n".join(eval0_justifications)}))
-                    #     for writer in writers:
-                    #         writer_feedback.append((writer, {'id':'Evaluator 1\'s justifications', 'text': "\n"+"\n".join(eval0_justifications)}))
-                    # if len(eval0_justifications) != 0:
-                    #     evaluator_feedback.append((evaluators[0], {'id':'Justifications from other evaluator', 'text': "\n"+"\n".join(eval1_justifications)}))
-                    #     for writer in writers:
-                    #         writer_feedback.append((writer, {'id':'Evaluator 2\'s justifications', 'text': "\n"+"\n".join(eval1_justifications)}))
 
                     # Sort out evaluator feedback+bonues by agent and show the messsages
                     evaluator_i_feedback = {}
@@ -443,7 +415,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                 elif 'explanation' in feedback['id'].lower():
                         text += '\n<u>' + feedback['id'] + '</u>: ' + feedback['text']
                 elif 'claim' in feedback['id']:
-                    text += '\n<i><u>' + feedback['id'] + '</u>: ' + feedback['text' + '</i>']
+                    text += '\n<i><u>' + feedback['id'] + '</u>: ' + feedback['text'] + '</i>'
                 else: #label
                     text += '\n\n<b>' + feedback['id'] + '</b>: ' + '\n' + feedback['text']
             if not writing: # evaluation feedback

@@ -39,7 +39,7 @@ task_config[
 ] = '''
 <p>
 	The <a href="https://cds.nyu.edu/" target="_blank">New York University Center for Data Science</a> is collecting your answers to study
-	machine understanding of English. Thank you for your help! [This is a pilot for a larger project]
+	machine understanding of English. Thank you for your help! <i>[This is a pilot for a larger project]</i>
 </p>
 
 There are two phases in each HIT: the <b>writing phase</b> and the <b>evaluating phase</b>. Each HIT has 4 people on it, and you will be paired with one person. Because you're working in teams of 4, <b>please be warned that you might have to wait for someone else to complete their task during the HIT.</b> We are going to ensure that we pay you for these wait times as well, and not just for your active work time.<br><br>
