@@ -306,7 +306,8 @@ def create_hit_type(
                     {'Country': 'AU'},
                     {'Country': 'NZ'},
                 ],
-                'RequiredToPreview': True,
+                # 'RequiredToPreview': True,
+                'ActionsGuarded': 'PreviewAndAccept',
             }
         )
 

@@ -444,6 +444,8 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
     def review_work(self):
         # Can review the work here to accept or reject it
+        for agent in self.agents:
+            agent.approve_work()
         pass
 
     def get_custom_task_data(self):
