@@ -111,6 +111,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                         self.writers_copy.remove(agent)
 
                         if len(self.writers_copy) == 0:
+                            print("NOTEY: hypothesis written")
                             self.turns +=1
 
             if self.turns == 2:
@@ -152,7 +153,8 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                     num = (i+1) % len(self.sets)
                     prompt = self.prompts[num]
                     self.map_entail[self.sets[i][0]], self.map_entail[self.sets[i][1]] = self.observe_hypotheses(prompt, label, self.sets[i], self.entailments[num*2], self.entailments[(num*2)+1])
-                            
+
+                print("NOTEY: ranking started")            
                 self.turns += 1
 
             if self.turns == 3:
@@ -200,6 +202,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                         self.neuts.append(evaluation3)
                         self.evaluators_neut.remove(agent)
                         if len(self.evaluators_neut) == 0 and (len(self.keep_evaluator_status) == len(self.agents)*2):
+                            print("NOTEY: ranking done")
                             self.turns += 1
 
             if self.turns == 4:
@@ -235,7 +238,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                     writers = self.sets[num]
                     for i, rankings in enumerate(set_evals[j]):
                         label = label_types[i]
-                        both_hypotheses = [hypothesis_types[i][j*2]['text'], hypothesis_types[i][j*2 + 1]['text']]
+                        both_hypotheses = [hypothesis_types[i][num*2]['text'], hypothesis_types[i][num*2 + 1]['text']]
                         # hypothesis0 = self.all_hypotheses[i][j*2]
                         # hypothesis1 = self.all_hypotheses[i][j*2 + 1]
                         eval0_explain = ''
@@ -347,15 +350,21 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 # Pause before moving to next prompt
                 time.sleep(10)
-                for agent in self.agents:
-                    agent.observe({'id':'<font color="black">Next round</font>', 
-                                   'text':'<font color="black"><b>Thank you! In a moment we will start the next round. Once again, you\'ll be asked to write claims for a new prompt.</b></font>'})
+                if self.meta_turn+1 < self.max_meta_turns:
+                    for agent in self.agents:
+                        agent.observe({'id':'<font color="black">Next round</font>', 
+                                       'text':'<font color="black"><b>Thank you! In a moment we will start the next round. Once again, you\'ll be asked to write claims for a new prompt.</b></font>'})
                 time.sleep(3)
 
+                print("NOTEY: turn completed")
                 self.meta_turn += 1
                 self.turns = 0
 
         else:
+            print("NOTEY: episode completed")
+            for agent in self.agents:
+                agent.observe({'id':'<font color="black">Next round</font>', 
+                               'text':'<font color="black"><b>Thank you! You have completed this HIT!.</b></font>'})
             self.episodeDone = True
 
     def observe_hypotheses(self, prompt, label, agents, hyp0, hyp1):
