@@ -93,19 +93,19 @@ def main():
 
         # Create the hits as specified by command line arguments
         qualifications = []
-        # qualifications.append({
-        #         'QualificationTypeId': '00000000000000000040',
-        #         'Comparator': 'GreaterThan',
-        #         'IntegerValues':[5000],
-        #         'ActionsGuarded': 'PreviewAndAccept',
-        #     })
+        qualifications.append({
+                'QualificationTypeId': '00000000000000000040',
+                'Comparator': 'GreaterThan',
+                'IntegerValues':[5000],
+                'ActionsGuarded': 'PreviewAndAccept',
+            })
         # PreviewAndAccept
-        # qualifications.append({
-        #         'QualificationTypeId': '000000000000000000L0',
-        #         'Comparator': 'GreaterThan',
-        #         'IntegerValues':[98],
-        #         'ActionsGuarded': 'PreviewAndAccept',
-        #     })
+        qualifications.append({
+                'QualificationTypeId': '000000000000000000L0',
+                'Comparator': 'GreaterThan',
+                'IntegerValues':[98],
+                'ActionsGuarded': 'PreviewAndAccept',
+            })
         mturk_manager.create_hits(qualifications)
 
         # Check workers eligiblity acts as a filter, and should return
