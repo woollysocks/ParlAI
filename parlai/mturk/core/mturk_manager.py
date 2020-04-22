@@ -1651,8 +1651,13 @@ class MTurkManager:
                 num_hits=self.required_hits, qualifications=qualifications
             )
         else:
+            # mturk_page_url = self.create_additional_hits(
+            #     num_hits=min(self.required_hits, self.opt['max_connections']),
+            #     qualifications=qualifications,
+            # )
+            # To-do: fix this hack and ensure enough HITs are always requested
             mturk_page_url = self.create_additional_hits(
-                num_hits=min(self.required_hits, self.opt['max_connections']),
+                num_hits=self.opt['max_connections'],
                 qualifications=qualifications,
             )
 

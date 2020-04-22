@@ -53,7 +53,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
             self.sets[i] = self.agents[i*2 : (i+1)*2]
         
         self.episodeDone = False
-        self.max_meta_turns = 3
+        self.max_meta_turns = 1 # 3
         self.meta_turn = 0
         self.interim_data = []
         self.turns = 0
@@ -111,7 +111,6 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                         self.writers_copy.remove(agent)
 
                         if len(self.writers_copy) == 0:
-                            print("NOTEY: hypothesis written")
                             self.turns +=1
 
             if self.turns == 2:
@@ -139,6 +138,8 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                     self.entailments[i] = {'id':'Claim '+str((i%2)+1), 'text': self.hypotheses_collect[i]['text'], 'task_data': {'respond_with_form':[], 'writing':False}}
                     self.contradictions[i] = {'id':'Claim '+str((i%2)+1),'text': self.hypotheses_collect[i]['task_data']}
                     self.neutrals[i] = {'id':'Claim '+str((i%2)+1),'text': self.hypotheses_collect[i]['task_data2']}
+
+                print("NOTEY: hypothesis written")
 
                 # Show agents the prompt from the other set
                 # And the claims for that prompt
