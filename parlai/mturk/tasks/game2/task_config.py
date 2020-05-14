@@ -13,7 +13,7 @@ task_config['frontend_version'] = 1
 On the Amazon Mechanical Turk web site, the HIT title appears in search results,
 and everywhere the HIT is mentioned.
 """
-task_config['hit_title'] = 'Pilot 3 for Textual Entailment Game'
+task_config['hit_title'] = 'Pilot 4 for Textual Entailment Game'
 
 
 """A description includes detailed information about the kind of task the HIT contains.

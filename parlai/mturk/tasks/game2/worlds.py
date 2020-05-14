@@ -10,6 +10,13 @@ import copy
 import time
 import itertools
 import pandas as pd
+from parlai.mturk.core.agents import TIMEOUT_MESSAGE
+
+TIMEOUT_MSG = '<b> The other person has timed out. \
+        Please click the "Done with this HIT" button below to finish this HIT.\
+        </b>'
+#ToDo: add waiting message
+# WAITING_MSG = 'Please wait while we match you with another worker...'
 
 class OnboardingWorld(MTurkOnboardWorld):
     """Example onboarding world. Sends a message from the world to the
@@ -20,12 +27,64 @@ class OnboardingWorld(MTurkOnboardWorld):
         ad = {}
         ad['id'] = 'System'
         ad['text'] = (
-            "Welcome onboard! You've been paired with another person. "
-            "You'll both be writing claims for one prompt "
-            "and evaluating for another prompt."
+            "Welcome onboard! Before starting the HIT, please complete this onboarding.\n\nPlease read the instructions carefully and evaluate the following example by deciding if the claim fits the label and the prompt. In this onboarding you only have have to do evaluation, no writing. Thank you!"
         )
         self.mturk_agent.observe(ad)
+        onboard_0_true = {
+                'id': '<b>Prompt</b>',
+                'text': 'He offered me one of the tiny Russian cigarettes he himself occasionally smoked.\
+                    \n<b>Claim</b>: He offered me one of the cigarettes that he sometime smoked.\
+                    \n\n<b>Label</b>: Definitely correct',
+                    'task_data': {'respond_with_form':[], 'onboard':True}
+            }
+        onboard_0_false = {
+                'id': 'Prompt',
+                'text': 'He offered me one of the tiny Russian cigarettes he himself occasionally smoked.\
+                    \nClaim: He offered me one of the cigarettes that he sometime smoked.\
+                     \n\nLabel: Neither',
+                    'task_data': {'respond_with_form':[], 'onboard':True}
+            }
+
+        onboard_1_true = {
+                'id': 'Prompt',
+                'text': 'Drew was puzzled.\
+                        \nClaim: Drew understood completely.\
+                        \n\nLabel: Definitely incorrect',
+                        'task_data': {'respond_with_form':[], 'onboard':True}
+            }
+        onboard_1_false = {
+                'id': 'Prompt',
+                'text': 'Drew was puzzled.\
+                        \nClaim: Drew understood completely.\
+                        \n\nLabel: Definitely correct',
+                        'task_data': {'respond_with_form':[], 'onboard':True}
+            }
+
+        onboard_2_true = {
+                'id': 'Prompt',
+                'text': 'The non-stop lift takes 55 seconds from ground to the observatory, but offers spectacular views of the city and beyond!\
+                    \nClaim: The lift was designed to offer the spectacular views.\
+                    \n\nLabel: Neither',
+                    'task_data': {'respond_with_form':[], 'onboard':True}
+            }
+        onboard_2_false = {
+                'id': 'Prompt',
+                'text': 'The non-stop lift takes 55 seconds from ground to the observatory, but offers spectacular views of the city and beyond!\
+                    \nClaim: The lift was designed to offer the spectacular views.\
+                    \n\nLabel: Definitely incorrect',
+                    'task_data': {'respond_with_form':[], 'onboard':True}
+            }
+
+        onboard_options = [onboard_0_true, onboard_0_false, onboard_1_true, onboard_1_false, onboard_2_true, onboard_2_false]
+
+        onboard_question = random.choice(onboard_options)
+        onboard_answer = 'Valid'
+        if onboard_question in onboard_options[1::2]:
+            onboard_answer = 'Invalid'
+        self.mturk_agent.observe(onboard_question)
+        onboard_check = self.mturk_agent.act(onboard=onboard_answer)
         self.episodeDone = True
+        return onboard_check
 
 class MultiRoleAgentWorld(MTurkTaskWorld):
     """
@@ -45,7 +104,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
         self.agents = [None for i in range(len(mturk_agents))]
         for agent in mturk_agents:
-            num = int(agent.demo_role[-1]) # number form Person1 etc.
+            num = int(agent.demo_role[-1]) # number form 'Person 1' etc.
             self.agents[num-1] = agent
         
         self.sets = {}
@@ -53,7 +112,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
             self.sets[i] = self.agents[i*2 : (i+1)*2]
         
         self.episodeDone = False
-        self.max_meta_turns = 1 # 3
+        self.max_meta_turns = 1#3
         self.meta_turn = 0
         self.interim_data = []
         self.turns = 0
@@ -62,6 +121,9 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
         self.yesflip = {'Claim 1':'Claim 2', 'Claim 2':'Claim 1'}
         self.writer_bonus = 0.3
         self.ranker_bonus = 0.1
+
+        self.incomplete_message = {'id': '<b><big>INCOMPLETE</big></b>', 
+                                'text': '<b><big> Your turn timed out and autosubmitted because these HITs require real-time interaction and we want to keep wait times low. </big></b>'}
 
     def parley(self):
         if self.meta_turn < self.max_meta_turns:
@@ -98,18 +160,26 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                 self.ents = []
                 self.conts = []
                 self.neuts = []
-                self.evals =[self.ents, self.conts, self.neuts]
 
                 self.turns += 1
 
             if self.turns == 1:
                 # Hypothesis writing
                 for agent in self.writers_copy:
-                    hypothesis = agent.act(blocking=False)
+                    hypothesis = agent.act(blocking=False, turn_timeout=30) #420
                     if hypothesis is not None:
-                        self.hypotheses.append(hypothesis)
+                        # self.hypotheses.append(hypothesis)
+                        # self.writers_copy.remove(agent)
+                        # If worker timed out, let them know.
+                        if 'incomplete' in hypothesis:
+                            agent.observe(self.incomplete_message)
+                            self.hypotheses.append({'id':hypothesis['id'],
+                                'text': '<i>No submission. Please mark as invalid and rank second</i>', 
+                                'task_data': '<i>No submission. Please mark as invalid and rank second</i>',
+                                'task_data2': '<i>No submission. Please mark as invalid and rank second</i>',})
+                        else: 
+                            self.hypotheses.append(hypothesis)
                         self.writers_copy.remove(agent)
-
                         if len(self.writers_copy) == 0:
                             self.turns +=1
 
@@ -155,16 +225,25 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                     prompt = self.prompts[num]
                     self.map_entail[self.sets[i][0]], self.map_entail[self.sets[i][1]] = self.observe_hypotheses(prompt, label, self.sets[i], self.entailments[num*2], self.entailments[(num*2)+1])
 
-                print("NOTEY: ranking started")            
+                print("NOTEY: ranking started")  
+                # evaluation, evaluation2, evaluation3 = None, None, None
                 self.turns += 1
 
             if self.turns == 3:
                 # Ranking entailments
                 # Show entailment set         
                 for agent in self.evaluators_ent:
-                    evaluation = agent.act(blocking=False)
+                    evaluation = agent.act(blocking=False, turn_timeout=30)#300
                     if evaluation is not None:
-                        self.ents.append(evaluation)
+                        if 'incomplete' in evaluation:
+                            agent.observe(self.incomplete_message)
+                            self.ents.append({'id':evaluation['id'],
+                                             'text': None,
+                                             'task_data':'',
+                                             'task_data2': None,
+                                             'task_data3': None})
+                        else:
+                            self.ents.append(evaluation)
                         self.evaluators_ent.remove(agent)
                         if agent not in self.evaluators_cont:
                             self.evaluators_cont.append(agent)
@@ -180,9 +259,17 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 # Show contradiction set
                 for agent in self.evaluators_cont:
-                    evaluation2 = agent.act(blocking=False)
+                    evaluation2 = agent.act(blocking=False, turn_timeout=30)#300
                     if evaluation2 is not None:
-                        self.conts.append(evaluation2)
+                        if 'incomplete' in evaluation2:
+                            agent.observe(self.incomplete_message)
+                            self.conts.append({'id':evaluation2['id'],
+                                             'text': None,
+                                             'task_data':'',
+                                             'task_data2': None,
+                                             'task_data3': None})
+                        else:
+                            self.conts.append(evaluation2)
                         self.evaluators_cont.remove(agent)
                         if agent not in self.evaluators_neut:
                             self.evaluators_neut.append(agent)
@@ -198,9 +285,17 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 # Show neutral set
                 for agent in self.evaluators_neut:
-                    evaluation3 = agent.act(blocking=False)
+                    evaluation3 = agent.act(blocking=False, turn_timeout=30)#300
                     if evaluation3 is not None:
-                        self.neuts.append(evaluation3)
+                        if 'incomplete' in evaluation3:
+                            agent.observe(self.incomplete_message)
+                            self.neuts.append({'id':evaluation3['id'],
+                                             'text': None,
+                                             'task_data':'',
+                                             'task_data2': None,
+                                             'task_data3': None})
+                        else:
+                            self.neuts.append(evaluation3)
                         self.evaluators_neut.remove(agent)
                         if len(self.evaluators_neut) == 0 and (len(self.keep_evaluator_status) == len(self.agents)*2):
                             print("NOTEY: ranking done")
@@ -213,6 +308,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 persons = [agent.demo_role for agent in self.agents]
                 label_types = ['Definitely Correct', 'Definitely Incorrect', 'Neither']
+                self.evals =[self.ents, self.conts, self.neuts]
                 self.maps = [self.map_entail, self.map_contradict, self.map_neutral]
                 hypothesis_types = [self.entailments, self.contradictions, self.neutrals]
                 set_evals = {}
@@ -247,17 +343,21 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                         writer_bonus_message = {'id': label, 'text': 'You ranked 1st! Bonus = $' + str(self.writer_bonus) +'.'}
                         writer_rank2_message = {'id': label, 'text': 'Unfortunately, you ranked 2nd.'}
-                        writer_nobonus_message = {'id':'No bonus', 'text':'Unfortunately you ranked 2nd on all 3 claims.'}
+                        # writer_nobonus_message = {'id':'No bonus', 'text':'Unfortunately you ranked 2nd on all 3 claims.'}
                         noagrm_bonus_message = {'id': label, 'text': 'The evaluators did not agree. Bonus = $' + str(self.ranker_bonus) + '.'} # Set as ranker_bonus to avoid incentivizing workers to always disagree on ranking
-                        noagrm_nobonus_message = {'id': label, 'text': 'You and the other ranker disagreed on the ranking.'}
+                        writer_incomplete_message = {'id': label, 'text': 'Unfortunately both evaluators timed out and did not submit rankings.'}
+                        
                         agrm_bonus_message = {'id': label, 'text': 'You agreed with the other evaluator! Bonus = $' + str(self.ranker_bonus) + '.'}
-                        eval_nobonus_message = {'id': 'No bonus', 'text': 'Unfortunately you disagreed with the other evaluator on all 3 sets.'}
+                        noagrm_nobonus_message = {'id': label, 'text': 'You and the other ranker disagreed on the ranking.'}
+                        # eval_nobonus_message = {'id': 'No bonus', 'text': 'Unfortunately you disagreed with the other evaluator on all 3 sets.'}
+                        eval_you_incomplete = {'id': label, 'text': 'Unfortunately you timed out and did not submit a ranking.'}
+                        eval_other_incomplete = {'id': label, 'text': 'Unfortunately the other evaluator timed out and did not submit a ranking.'}
 
                         # Map the selected choices to "unflip" the ordering
                         # and collect ranker justifications
                         if rankings[1]['id'] == persons[(j*2)+1]: # Even numbered Persons 
                             this_ranker = self.agents[int(persons[(j*2)+1][-1])-1]
-                            rankings[1]['text'] = self.maps[i][this_ranker][rankings[1]['text']]
+                            # rankings[1]['text'] = self.maps[i][this_ranker][rankings[1]['text']]
                             if rankings[0]['task_data'] is not '':
                                 eval0_justifications.append(label + ': ' + rankings[0]['task_data'])
                                 eval0_explain = rankings[0]['task_data']
@@ -266,7 +366,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                                 eval1_explain = rankings[1]['task_data']
                         else:
                             this_ranker = self.agents[int(persons[j*2][-1])-1]
-                            rankings[0]['text'] = self.maps[i][this_ranker][rankings[0]['text']]
+                            # rankings[0]['text'] = self.maps[i][this_ranker][rankings[0]['text']]
                             if rankings[0]['task_data'] is not '':
                                 eval1_justifications.append(label + ': ' + rankings[0]['task_data'])
                                 eval1_explain = rankings[0]['task_data']
@@ -276,17 +376,23 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                         # Show messages about bonuses
                         if rankings[0]['text'] == rankings[1]['text']:
-                            agrm_rate += 1
-                            for evaluator in evaluators:
-                                evaluator_feedback.append((evaluator, agrm_bonus_message))
-                            if rankings[0]['text'] == 'Claim 1':
-                                writer_feedback.append((writers[0], writer_bonus_message))
-                                writer_feedback.append((writers[1], writer_rank2_message))
-                                w0_rank += 1
+                            if rankings[0]['text'] is None:
+                                evaluator_feedback.append((evaluators[0], eval_you_incomplete))
+                                evaluator_feedback.append((evaluators[1], eval_you_incomplete))
+                                for writer in writers:
+                                    writer_feedback.append((writer, writer_incomplete_message))
                             else:
-                                writer_feedback.append((writers[1], writer_bonus_message))
-                                writer_feedback.append((writers[0], writer_rank2_message))
-                                w1_rank += 1
+                                agrm_rate += 1
+                                for evaluator in evaluators:
+                                    evaluator_feedback.append((evaluator, agrm_bonus_message))
+                                if rankings[0]['text'] == 'Claim 1':
+                                    writer_feedback.append((writers[0], writer_bonus_message))
+                                    writer_feedback.append((writers[1], writer_rank2_message))
+                                    w0_rank += 1
+                                else:
+                                    writer_feedback.append((writers[1], writer_bonus_message))
+                                    writer_feedback.append((writers[0], writer_rank2_message))
+                                    w1_rank += 1
                         else:
                             # Rankers did not agree
                             ## Tell writers
@@ -295,8 +401,16 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                                 w0_rank += 1
                                 w1_rank +=1
                             ## Tell rankers
-                            for evaluator in evaluators:
-                                evaluator_feedback.append((evaluator, noagrm_nobonus_message))
+                            ### Message if timed out
+                            if rankings[0]['text'] == None:
+                                evaluator_feedback.append((evaluators[0], eval_you_incomplete))
+                                evaluator_feedback.append((evaluators[1], eval_other_incomplete))
+                            elif rankings[1]['text'] == None:
+                                evaluator_feedback.append((evaluators[0], eval_other_incomplete))
+                                evaluator_feedback.append((evaluators[1], eval_you_incomplete))
+                            else: # Disgree on ranking
+                                for evaluator in evaluators:
+                                    evaluator_feedback.append((evaluator, noagrm_nobonus_message))
 
                         if eval0_explain != '':
                             evaluator_feedback.append((evaluators[1], {'id':'Explanation from other evaluator', 'text': eval0_explain}))
@@ -365,7 +479,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
             print("NOTEY: episode completed")
             for agent in self.agents:
                 agent.observe({'id':'<font color="black">Next round</font>', 
-                               'text':'<font color="black"><b>Thank you! You have completed this HIT!.</b></font>'})
+                               'text':'<font color="black"><b>Thank you! You have completed this HIT!</b></font>'})
             self.episodeDone = True
 
     def observe_hypotheses(self, prompt, label, agents, hyp0, hyp1):

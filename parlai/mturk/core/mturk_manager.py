@@ -701,6 +701,7 @@ class MTurkManager:
             agent.hit_is_returned = True
             # Treat as a socket_dead event
             self._on_socket_dead(agent.worker_id, assignment_id)
+            self.create_additional_hits(3)
         elif mturk_event_type == SNS_ASSIGN_ABANDONDED:
             agent.set_hit_is_abandoned()
             agent.hit_is_returned = True
@@ -778,6 +779,7 @@ class MTurkManager:
 
         def _onboard_function(mturk_agent):
             """Onboarding wrapper to set state to onboarding properly"""
+            move_to_waiting = True
             if self.onboard_function:
                 conversation_id = 'o_' + str(uuid.uuid4())
                 self.worker_manager.change_agent_conversation(
@@ -791,6 +793,13 @@ class MTurkManager:
                     return
                 # call onboarding function
                 save_data = self.onboard_function(mturk_agent)
+                if isinstance(save_data, tuple):
+                    save_data, episode_done = save_data
+                    if episode_done == True:
+                        move_to_waiting = False
+                    else:
+                        pass
+
                 if save_data is not None:
                     MTurkDataHandler.save_world_data(
                         save_data,
@@ -801,7 +810,11 @@ class MTurkManager:
                 mturk_agent.clear_messages()
 
             # once onboarding is done, move into a waiting world
-            self._move_agents_to_waiting([mturk_agent])
+            if move_to_waiting == False:
+                # Worker failed onboarding, was removed from the HIT, and a new HIT should be cerated to replace them
+                self.create_additional_hits(1)
+            else:
+                self._move_agents_to_waiting([mturk_agent])
 
         if assignment_id in self.assignment_to_onboard_thread:
             if self.assignment_to_onboard_thread[assignment_id].isAlive():
@@ -1380,6 +1393,21 @@ class MTurkManager:
         # Send the disconnect event to all workers in the convo
         self._handle_agent_disconnect(worker_id, assign_id)
 
+    def handle_turker_onboard_reject(self, worker_id, assign_id):
+        """To be used by the MTurk agent when the worker doesn't send a message
+        within the expected window.
+        """
+        # Expire the hit for the disconnected user
+        text = (
+            'Unfortunately, your answer is incorrect. If you\'d still like to work ong this task, please grab a new HIT, read the instructions carefully, and try again. Thank you very much!'
+        )
+        self.force_expire_hit(worker_id, assign_id, text)
+
+        # Send the disconnect event to all workers in the convo
+        self._handle_agent_disconnect(worker_id, assign_id)
+
+        # self.create_additional_hits(1)
+
     def send_message(
         self, receiver_id, assignment_id, data, blocking=True, ack_func=None
     ):
@@ -1589,6 +1617,7 @@ class MTurkManager:
         """Handle creation for a specific number of hits/assignments
         Put created HIT ids into the hit_id_list
         """
+        print("ok HITs being created")
         shared_utils.print_and_log(logging.INFO, 'Creating {} hits...'.format(num_hits))
 
         qualifications = self.get_qualification_list(qualifications)

@@ -646,6 +646,221 @@ class FeedbackMode extends React.Component {
   }
 }
 
+class OnboardResponse extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      // textreason: '',
+      // claimChoice: '',
+      onboardvalidation: '',
+      // validation2: '',
+      taskData: [],
+      sending: false};
+    this.handleInputChange = this.handleInputChange.bind(this);
+    // this.handleEnterKey = this.handleEnterKey.bind(this);
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    // Only change in the active status of this component should cause a
+    // focus event. Not having this would make the focus occur on every
+    // state update (including things like volume changes)
+    if (this.props.active && !prevProps.active) {
+      $('input#id_text_input').focus();
+    }
+    this.props.onInputResize();
+  }
+
+  tryMessageSend() {
+    if (this.state.entailText != '' && this.state.contradictText != '' && this.state.neutralText != '' && this.props.active && !this.state.sending) {
+      this.setState({ sending: true });
+      this.props.onMessageSend(this.state.entailText, this.state.contradictText , this.state.neutralText, {}, () =>
+        this.setState({ entailText: '', contradictText: '', neutralText: '', sending: false })
+      );
+    }
+  }
+
+  tryMessageSend() {
+    if (this.props.active && !this.state.sending) {
+      this.setState({ sending: true });
+      this.props.onMessageSend(this.state.onboardvalidation, {}, {}, {}, () =>
+        this.setState({ onboardvalidation: '', sending: false })
+      );
+    }
+  }
+
+  handleInputChange(event) {
+    console.log(event)
+    let target = event.target;
+    let value = target.value;
+    let name = target.name;
+
+    this.setState({ [name]: value });
+  }
+
+  checkValidData() {
+    console.log(this.state);
+    if (this.state.validation1 !== "") {
+      let response_data = {
+        validation1: this.state.validation1,
+        entailText: this.state.entailText
+      };
+      this.props.onValidDataChange(true, response_data);
+      return;
+    }
+    this.props.onValidDataChange(false, {});
+  }
+
+
+  handleKeyPress(e) {
+    if (e.key === 'Enter') {
+      this.tryMessageSend();
+      e.stopPropagation();
+      e.nativeEvent.stopImmediatePropagation();
+    }
+  }
+
+  _showMessage = (bool) => {
+    this.setState({
+      showMessage: bool
+    });
+  }
+
+  updateValue(amount) {
+    if ((amount != '' && isNaN(amount)) || amount < 0) {
+      return;
+    }
+    amount = amount == '' ? 0 : amount;
+    this.setState({ entailText: '' + amount });
+  }
+
+  render() {
+    // TODO maybe move to CSS?
+    let pane_style = {
+      paddingLeft: '25px',
+      paddingTop: '20px',
+      paddingBottom: '20px',
+      paddingRight: '25px',
+      float: 'left',
+      width: '100%',
+      height: '150px',
+      overflowY: 'scroll',
+    };
+
+    let input_style = {
+      height: '50px',
+      width: '100%',
+      display: 'block',
+      float: 'left',
+
+    };
+    let input_inline_style = {
+      height: '50px',
+      width: '100%',
+      display: 'inline-block',
+      float: 'left',
+    };
+    let submit_style = {
+      width: '100px',
+      height: '100%',
+      fontSize: '16px',
+      float: 'left',
+      marginLeft: '10px',
+      padding: '0px',
+    };
+
+    const approvebox  = {
+      backgroundColor: '#66B46E',
+      borderRadius: 3,
+      padding: '5px',
+      border: '1px solid #44864B',
+      color: 'white',
+      width: 'fit-content',
+    }
+
+    const rejectbox  = {
+      backgroundColor: '#E8684C',
+      borderRadius: 3,
+      padding: '5px',
+      border: '1px solid #D34000',
+      color: 'white',
+    }
+
+    const inline_text = {
+      display: "inline-block",
+    };
+
+    const onboard_text = "Given the prompt sentence and the label, the the claim valid?" ;
+    const approve = "Valid"
+    const invalid = "Invalid"
+    let validation_buttons = (
+      <div>
+        <Form
+          horizontal
+          style={{ backgroundColor: "#eeeeee", paddingBottom: "10px", 
+            display: "inline-block", verticalAlign:"top" }}
+        >
+          <div className="container" style={{ width: "auto" }}>
+            <ControlLabel  style={{paddingRight: "30px"}}> {onboard_text} </ControlLabel>
+            <FormGroup 
+            style={{display: "inline-block", verticalAlign: "top"}}
+            >
+              <Col sm={6}>
+                <Radio
+                  name="onboardvalidation"
+                  value={approve}
+                  style={{ width: "100%" }}
+                  checked={this.state.onboardvalidation == approve}
+                  onChange={this.handleInputChange}
+                >
+                  <div style={approvebox}> Approve </div>
+                </Radio>
+              </Col>
+              <Col sm={6}>
+                <Radio
+                  name="onboardvalidation"
+                  value={invalid}
+                  style={{ width: "100%" }}
+                  checked={this.state.onboardvalidation == invalid}
+                  onChange={this.handleInputChange}
+                >
+                  <div style={rejectbox}> Invalid </div>
+                </Radio>
+              </Col>
+            </FormGroup>
+          </div>
+        </Form>
+      </div>
+    );
+    
+    let submit_button = (
+      <Button
+        className="btn btn-primary"
+        style={submit_style}
+        id="id_send_msg_button"
+        disabled={
+          this.state.claimChoice == '' || this.state.validation1 == '' || this.state.validation2 == '' || !this.props.active || this.state.sending
+        }
+        onClick={() => this.tryMessageSend()}
+      >
+        Submit
+      </Button>
+    );
+
+    return (
+      <div
+        id="response-type-text-input"
+        className="response-type-module"
+        style={pane_style}
+      >
+        <div style={input_style}>
+        {validation_buttons}
+        {submit_button}
+        </div>
+      </div>
+    );
+  }
+}
+
 class ResponsePane extends React.Component {
   render() {
     let v_id = this.props.v_id;
@@ -660,7 +875,7 @@ class ResponsePane extends React.Component {
         break;
       case 'text_input':
       case 'waiting':
-        if (this.props.task_data && this.props.task_data['respond_with_form'] && this.props.task_data['writing'] !== true && this.props.task_data['feedback'] !== true) {
+        if (this.props.task_data && this.props.task_data['respond_with_form'] && this.props.task_data['writing'] !== true && this.props.task_data['feedback'] !== true && this.props.task_data['onboard'] !== true ) {
           response_pane = (
             <EvaluatorResponse
               {...this.props}
@@ -676,6 +891,13 @@ class ResponsePane extends React.Component {
           );
         } else if (this.props.task_data['feedback'] === true){
           response_pane = <FeedbackMode {...this.props} />;
+        } else if (this.props.task_data && this.props.task_data['respond_with_form'] && this.props.task_data['onboard'] === true) {
+          response_pane = (
+            <OnboardResponse
+              {...this.props}
+              active={this.props.chat_state == 'text_input'}
+            />
+          );
         } else {
           response_pane = <XDoneResponse {...this.props} />;
         }
@@ -759,7 +981,7 @@ class CoreChatMessage extends React.Component {
     // <b>{this.props.agent_id}</b>: <span dangerouslySetInnerHTML={{ __html: display_message }} />
     let agent_id = this.props.agent_id;
     let display_message = null;
-    if (this.props.task_data && !this.props.task_data['writing'] && !this.props.task_data['feedback'] && !this.props.task_data['respond_with_form'] && 
+    if (this.props.task_data && !this.props.task_data['writing'] && !this.props.task_data['feedback'] && !this.props.task_data['onboard'] && !this.props.task_data['respond_with_form'] && 
       (Object.entries(this.props.task_data3).length === 0)) {
       let hypothesis_entailment = this.props.message;
       let hypothesis_contradiction = this.props.task_data;

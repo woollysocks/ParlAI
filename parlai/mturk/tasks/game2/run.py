@@ -47,7 +47,7 @@ def main():
     persons = {}
     mturk_agent_roles = []
     for i in range(1, task_opt['num_workers']+1):
-        persons[i] = 'Person'+str(i)
+        persons[i] = 'Person '+str(i)
         mturk_agent_roles.append(persons[i])
 
     # Instantiate an MTurkManager with the given options and a maximum number
@@ -65,20 +65,21 @@ def main():
     # Create an onboard_function, which will be run for workers who have
     # accepted your task and must be completed before they are put in the
     # queue for a task world.
+    onboarded_workers = []
     def run_onboard(worker):
         nonlocal role_index
         role = mturk_agent_roles[role_index % len(mturk_agent_roles)]
         role_index += 1
         worker.update_agent_id('Onboarding {}'.format(role))
         worker.demo_role = role
-        # if role == 'Writer0' or role == 'Writer1':
         world = OnboardingWorld(opt=opt, mturk_agent=worker)
-        # else:
-        #     world = EvaluatorOnboardingWorld(opt=opt, mturk_agent=worker)
-        while not world.episode_done():
-            world.parley()
+        if worker not in onboarded_workers:
+            while not world.episode_done():
+                onboard_test = world.parley()
+            # self.onboarded_workers.append(worker)
         world.shutdown()
-        return world.prep_save_data([worker])
+        # import pdb; pdb.set_trace()
+        return world.prep_save_data([worker]), onboard_test['episode_done']
 
     # If we want to use the above onboard function, we can replace the below
     # with set_onboard_function(onboard_function=run_onboard)
@@ -93,19 +94,19 @@ def main():
 
         # Create the hits as specified by command line arguments
         qualifications = []
-        qualifications.append({
-                'QualificationTypeId': '00000000000000000040',
-                'Comparator': 'GreaterThan',
-                'IntegerValues':[5000],
-                'ActionsGuarded': 'PreviewAndAccept',
-            })
-        # PreviewAndAccept
-        qualifications.append({
-                'QualificationTypeId': '000000000000000000L0',
-                'Comparator': 'GreaterThan',
-                'IntegerValues':[98],
-                'ActionsGuarded': 'PreviewAndAccept',
-            })
+        # qualifications.append({
+        #         'QualificationTypeId': '00000000000000000040',
+        #         'Comparator': 'GreaterThan',
+        #         'IntegerValues':[5000],
+        #         'ActionsGuarded': 'PreviewAndAccept',
+        #     })
+        # # PreviewAndAccept
+        # qualifications.append({
+        #         'QualificationTypeId': '000000000000000000L0',
+        #         'Comparator': 'GreaterThan',
+        #         'IntegerValues':[98],
+        #         'ActionsGuarded': 'PreviewAndAccept',
+        #     })
         mturk_manager.create_hits(qualifications)
 
         # Check workers eligiblity acts as a filter, and should return

@@ -388,6 +388,16 @@ class MTurkAgent(Agent):
         self.mturk_manager.handle_turker_timeout(self.worker_id, self.assignment_id)
         return self._get_episode_done_msg(TIMEOUT_MESSAGE)
 
+    def prepare_onboard_reject(self):
+        """Log a timeout event, tell mturk manager it occurred, return message
+        to return for the act call
+        """
+        shared_utils.print_and_log(
+            logging.INFO, '{} failed the onboarding task.'.format(self.id)
+        )
+        self.mturk_manager.handle_turker_onboard_reject(self.worker_id, self.assignment_id)
+        return self._get_episode_done_msg(TIMEOUT_MESSAGE)
+
     def request_message(self):
         if not (
             self.disconnected or self.some_agent_disconnected or self.hit_is_expired
@@ -398,7 +408,7 @@ class MTurkAgent(Agent):
                 {'text': data_model.COMMAND_SEND_MESSAGE},
             )
 
-    def act(self, timeout=None, blocking=True):
+    def act(self, timeout=None, turn_timeout=None, blocking=True, onboard=None):
         """Sends a message to other agents in the world. If blocking, this
         will wait for the message to come in so it can be sent. Otherwise
         it will return None.
@@ -414,6 +424,14 @@ class MTurkAgent(Agent):
                 # If time is exceeded, timeout
                 if time.time() - self.message_request_time > timeout:
                     return self.prepare_timeout()
+
+            # Check if agent is our of time for current turn
+            if turn_timeout:
+                # If time is exceeded, timeout and return
+                if time.time() - self.message_request_time > turn_timeout:
+                    msg = {'id': self.id, 'incomplete': True, 'episode_done': False}
+                    self.message_request_time = None
+                    return msg
 
             # Get a new message, if it's not None reset the timeout
             msg = self.get_new_act_message()
@@ -433,6 +451,12 @@ class MTurkAgent(Agent):
                 msg = self.get_new_act_message()
                 self.message_request_time = None
                 if msg is not None:
+                    if onboard is not None:
+                        if msg['text'] == onboard:
+                            return msg
+                        else:
+                            return self.prepare_onboard_reject()
+
                     return msg
 
                 # Check if the Turker waited too long to respond
