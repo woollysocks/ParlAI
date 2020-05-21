@@ -42,7 +42,7 @@ task_config[
 	machine understanding of English. <b>Please read these full instructions before starting work on the HIT</b> and thank you for your help! <i>[This is a pilot for a larger project]</i>
 </p>
 
-There are two phases in each HIT: the <b>writing phase</b> and the <b>evaluating phase</b>. Each HIT has 4 people on it, and you will be paired with one person. Because you're working in teams of 4, <b>please be warned that you might have to wait for someone else to complete their task during the HIT.</b> We are going to ensure that you're paid for the wait times as well.<br>
+There are two phases in each HIT: the <b>writing phase</b> and the <b>evaluating phase</b>. Each HIT has 4 people on it, and you will be paired with one person. Because you're working in teams of 4, <b>please be warned that you might have to wait for someone else to complete their task during the HIT.</b> We are going to ensure that you're paid for the wait times as well. You also have limited time to complete each task so as to limit waiting time.<br>
 
 <h4><u>Phase 1: Writing</u></h4>
 <p> You, and your partner, will be shown a prompt that describes a situation or event. Using only this description and what you know about the world, please write</p>

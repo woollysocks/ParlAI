@@ -392,6 +392,7 @@ class MTurkManager:
                 continue
 
             conversation_id = 'w_{}'.format(uuid.uuid4())
+            # print(conversation_id)
             if self.accepting_workers:
                 # Move the worker into a waiting world
                 self.worker_manager.change_agent_conversation(
@@ -424,6 +425,8 @@ class MTurkManager:
         testing purposes, and the same worker can be returned more than once
         """
         pool = [a for a in self.agent_pool if not a.hit_is_returned]
+        # if len(self.agent_pool) == 4:
+        #     import pdb; pdb.set_trace()
         if eligibility_function['multiple'] is True:
             agents = eligibility_function['func'](pool)
         else:
@@ -440,6 +443,7 @@ class MTurkManager:
     def _add_agent_to_pool(self, agent):
         """Add a single agent to the pool"""
         if agent not in self.agent_pool:
+            # print("Adding worker {} to pool".format(agent.worker_id))
             # Add the agent to pool
             with self.agent_pool_change_condition:
                 if agent not in self.agent_pool:
@@ -448,6 +452,7 @@ class MTurkManager:
                         "Adding worker {} to pool.".format(agent.worker_id),
                     )
                     self.agent_pool.append(agent)
+                    # print("Pool:", self.agent_pool)
 
     def _remove_from_agent_pool(self, agent):
         """Remove an agent from the pool. should be called under the
@@ -1250,6 +1255,7 @@ class MTurkManager:
             # Loop forever starting task worlds until desired convos are had
             with self.agent_pool_change_condition:
                 valid_agents = self._get_unique_pool(eligibility_function)
+                # print("Valid agents:", valid_agents)
                 needed_agents = len(self.mturk_agent_ids)
                 if len(valid_agents) >= needed_agents:
                     # enough agents in pool to start new conversation

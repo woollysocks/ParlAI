@@ -71,7 +71,7 @@ class WaitingMessage extends React.Component {
       display: 'table',
       backgroundColor: '#fff',
     };
-    let text = 'Waiting for someone else on the HIT to complete their task...';
+    let text = 'Waiting for the system or for someone else on the HIT to complete their task...';
     if (this.props.world_state == 'waiting') {
       text = 'Waiting to pair with a task...';
     }
@@ -838,7 +838,7 @@ class OnboardResponse extends React.Component {
         style={submit_style}
         id="id_send_msg_button"
         disabled={
-          this.state.claimChoice == '' || this.state.validation1 == '' || this.state.validation2 == '' || !this.props.active || this.state.sending
+          this.state.onboardvalidation == '' || !this.props.active || this.state.sending
         }
         onClick={() => this.tryMessageSend()}
       >

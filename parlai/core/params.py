@@ -442,7 +442,7 @@ class ParlaiParser(argparse.ArgumentParser):
             dest='num_workers',
             default=4,
             type=int,
-            help='Max number of hits each worker can perform during current group run',
+            help='Number of workers per HIT',
         )
 
         # it helps to indicate to agents that they're in interactive mode, and

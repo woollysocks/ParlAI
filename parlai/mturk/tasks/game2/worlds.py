@@ -33,45 +33,45 @@ class OnboardingWorld(MTurkOnboardWorld):
         onboard_0_true = {
                 'id': '<b>Prompt</b>',
                 'text': 'He offered me one of the tiny Russian cigarettes he himself occasionally smoked.\
-                    \n<b>Claim</b>: He offered me one of the cigarettes that he sometime smoked.\
-                    \n\n<b>Label</b>: Definitely correct',
+                    \n<b>Label</b>: Definitely correct\
+                    \n\n<b>Claim</b>: He offered me one of the cigarettes that he sometime smoked.',
                     'task_data': {'respond_with_form':[], 'onboard':True}
             }
         onboard_0_false = {
-                'id': 'Prompt',
+                'id': '<b>Prompt</b>',
                 'text': 'He offered me one of the tiny Russian cigarettes he himself occasionally smoked.\
-                    \nClaim: He offered me one of the cigarettes that he sometime smoked.\
-                     \n\nLabel: Neither',
+                    \n<b>Label</b>: Neither definitely correct nor definitely incorrect\
+                    \n\n<b>Claim</b>: He offered me one of the cigarettes that he sometime smoked.',
                     'task_data': {'respond_with_form':[], 'onboard':True}
             }
 
         onboard_1_true = {
-                'id': 'Prompt',
+                'id': '<b>Prompt</b>',
                 'text': 'Drew was puzzled.\
-                        \nClaim: Drew understood completely.\
-                        \n\nLabel: Definitely incorrect',
+                        \n<b>Label</b>: Definitely incorrect\
+                        \n\n<b>Claim</b> Drew understood completely.',
                         'task_data': {'respond_with_form':[], 'onboard':True}
             }
         onboard_1_false = {
-                'id': 'Prompt',
+                'id': '<b>Prompt</b>',
                 'text': 'Drew was puzzled.\
-                        \nClaim: Drew understood completely.\
-                        \n\nLabel: Definitely correct',
+                    \n<b>Label</b>: Definitely correct\
+                    \n\n<b>Claim</b> Drew understood completely.',
                         'task_data': {'respond_with_form':[], 'onboard':True}
             }
 
         onboard_2_true = {
-                'id': 'Prompt',
+                'id': '<b>Prompt</b>',
                 'text': 'The non-stop lift takes 55 seconds from ground to the observatory, but offers spectacular views of the city and beyond!\
-                    \nClaim: The lift was designed to offer the spectacular views.\
-                    \n\nLabel: Neither',
+                    \n<b>Label</b>: Neither definitely correct nor definitely incorrect\
+                    \n\n<b>Claim</b> The lift was designed to offer the spectacular views.',
                     'task_data': {'respond_with_form':[], 'onboard':True}
             }
         onboard_2_false = {
-                'id': 'Prompt',
+                'id': '<b>Prompt</b>',
                 'text': 'The non-stop lift takes 55 seconds from ground to the observatory, but offers spectacular views of the city and beyond!\
-                    \nClaim: The lift was designed to offer the spectacular views.\
-                    \n\nLabel: Definitely incorrect',
+                    \n<b>Label</b>: Definitely incorrect\
+                    \n\n<b>Claim</b>: The lift was designed to offer the spectacular views.',
                     'task_data': {'respond_with_form':[], 'onboard':True}
             }
 
@@ -166,7 +166,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
             if self.turns == 1:
                 # Hypothesis writing
                 for agent in self.writers_copy:
-                    hypothesis = agent.act(blocking=False, turn_timeout=30) #420
+                    hypothesis = agent.act(blocking=False, turn_timeout=60) #420
                     if hypothesis is not None:
                         # self.hypotheses.append(hypothesis)
                         # self.writers_copy.remove(agent)
@@ -205,7 +205,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                 self.entailments, self.contradictions, self.neutrals  = {}, {}, {}
                 self.map_entail, self.map_contradict, self.map_neutral = {}, {}, {} # to store flip maps
                 for i in range(self.num_agents):
-                    self.entailments[i] = {'id':'Claim '+str((i%2)+1), 'text': self.hypotheses_collect[i]['text'], 'task_data': {'respond_with_form':[], 'writing':False}}
+                    self.entailments[i] = {'id':'Claim '+str((i%2)+1), 'text': self.hypotheses_collect[i]['text'], 'task_data': {'respond_with_form':[], 'writing':False, 'onboard':False}}
                     self.contradictions[i] = {'id':'Claim '+str((i%2)+1),'text': self.hypotheses_collect[i]['task_data']}
                     self.neutrals[i] = {'id':'Claim '+str((i%2)+1),'text': self.hypotheses_collect[i]['task_data2']}
 
@@ -216,6 +216,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                 for agent in self.agents:
                     agent.observe({'id':'Phase 2', 
                                    'text':'<b>Thank you for writing your claims! Now please read the following prompt and rank the claims written by other people,</b>'})
+                time.sleep(3)
                 label = 'Definitely correct'
                 # Round robin exchange of prompts and claims for ranking
                 setnum = itertools.cycle(range(len(self.sets)))
@@ -233,7 +234,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                 # Ranking entailments
                 # Show entailment set         
                 for agent in self.evaluators_ent:
-                    evaluation = agent.act(blocking=False, turn_timeout=30)#300
+                    evaluation = agent.act(blocking=False, turn_timeout=60)#300
                     if evaluation is not None:
                         if 'incomplete' in evaluation:
                             agent.observe(self.incomplete_message)
@@ -259,7 +260,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 # Show contradiction set
                 for agent in self.evaluators_cont:
-                    evaluation2 = agent.act(blocking=False, turn_timeout=30)#300
+                    evaluation2 = agent.act(blocking=False, turn_timeout=60)#300
                     if evaluation2 is not None:
                         if 'incomplete' in evaluation2:
                             agent.observe(self.incomplete_message)
@@ -285,7 +286,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 # Show neutral set
                 for agent in self.evaluators_neut:
-                    evaluation3 = agent.act(blocking=False, turn_timeout=30)#300
+                    evaluation3 = agent.act(blocking=False, turn_timeout=60)#300
                     if evaluation3 is not None:
                         if 'incomplete' in evaluation3:
                             agent.observe(self.incomplete_message)
@@ -444,24 +445,52 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 # Organize data for future nikita
                 label_types = ['entailment', 'contradiction', 'neutral']
-                # hypothesis_types = [self.entailments, self.contradictions, self.neutrals]
+                data_dump = pd.DataFrame(columns=['label', 'prompt', 'claim-1', 'claim-2', 'claim1-val-p1', 
+                    'claim1-val-p2', 'claim2-val-p1', 'claim2-val-p2', 'rank-p1', 'rank-p2', 'expl-p1', 'expl-p2'])
+                worker_ids = [(agent.demo_role, agent.worker_id) for agent in self.agents]
                 for i, evals in enumerate(self.evals):
+                    done = []
                     for j in range(len(evals)):
-                        evals[j]['label'] = label_types[i]
+                        skip = False
                         for num in range(int(self.num_agents/2)):
-                            if evals[j]['id'] in  persons[num*2:(num*2)+2]: # 0:2, 2:4
-                                setnum = num
-                            else:
-                                pass
-                        evals[j]['prompt'] = self.prompts[setnum]['text']
-                        evals[j]['hypothesis-1'] = hypothesis_types[i][setnum*2]['text']
-                        evals[j]['hypothesis-2'] = hypothesis_types[i][(setnum*2)+1]['text']
-                        evals[j]['explanation'] = evals[j].pop('task_data')
-                        evals[j]['hyp1-validation'] = evals[j].pop('task_data2')
-                        evals[j]['hyp2-validation'] = evals[j].pop('task_data3')
+                            if evals[j]['id'] in  persons[num*2:(num*2)+2]: # 0->1,2 ; 1->3,4
+                                if evals[j]['id'] in done:
+                                    skip = True
+                                else:
+                                    setnum = num
+                                    done += persons[num*2:(num*2)+2]
+                        if not skip:
+                            this_data ={}
+                            this_data['p1'] = persons[num*2:(num*2)+2][0]
+                            this_data['p2'] = persons[num*2:(num*2)+2][0]
+                            this_data['label'] = label_types[i]
+                            this_data['prompt'] = self.prompts[setnum]['text']
+                            this_data['claim-1'] = hypothesis_types[i][setnum*2]['text']
+                            this_data['claim-2'] = hypothesis_types[i][(setnum*2)+1]['text']
 
-                data = pd.DataFrame(self.ents + self.conts + self.neuts)
-                self.interim_data.append(data.to_dict()) # dict so we don't require pickling
+                            eval_persons = persons[((setnum+1)%2)*2:(((setnum+1)%2)*2)+2]
+                            this_data['eval_p1'] = eval_persons[0]
+                            this_data['eval_p2'] = eval_persons[1]
+                            eval_p1 = list(filter(lambda x: x['id']==eval_persons[0], evals))[0]
+                            eval_p2 = list(filter(lambda x: x['id']==eval_persons[1], evals))[0]
+                            this_data['claim1-val-p1'] = eval_p1['task_data2']
+                            this_data['claim2-val-p1'] = eval_p1['task_data3']
+                            this_data['claim1-val-p2'] = eval_p2['task_data2']
+                            this_data['claim2-val-p2'] = eval_p2['task_data3']
+
+                            this_data['rank-p1'] = eval_p1['text']
+                            this_data['rank-p2'] = eval_p2['text']
+
+                            this_data['expl-p1'] = eval_p1['task_data']
+                            this_data['expl-p2'] = eval_p2['task_data']
+
+                            this_data['workers'] = worker_ids
+
+                            df2 = pd.DataFrame.from_dict([this_data], orient='columns')
+                            data_dump = pd.concat([data_dump, df2], sort=False)
+
+                data_dump = data_dump.reset_index(drop=True)
+                self.interim_data.append(data_dump.to_dict()) # dict so we don't require pickling
 
                 # Pause before moving to next prompt
                 time.sleep(10)
@@ -523,7 +552,6 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
             elif len(agents) == 1:
                 make_observation(agents[0], flip1, flip0)
                 mappy[0] = self.yesflip
-                # import pdb; pdb.set_trace()
             else:
                 assert "Do not currently support more than 2 agents in a single set."
         return mappy[0], mappy[1]
@@ -548,6 +576,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                 agents[i].observe({'id':'And these are your bonuses for the claims you wrote in Phase 1', 'text':text, 'task_data': {'respond_with_form':[], 'feedback':True}})
 
     def episode_done(self):
+        self.review_work()
         return self.episodeDone
 
     def shutdown(self):
