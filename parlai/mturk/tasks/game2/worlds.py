@@ -112,7 +112,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
             self.sets[i] = self.agents[i*2 : (i+1)*2]
         
         self.episodeDone = False
-        self.max_meta_turns = 1#3
+        self.max_meta_turns = 3
         self.meta_turn = 0
         self.interim_data = []
         self.turns = 0
@@ -166,7 +166,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
             if self.turns == 1:
                 # Hypothesis writing
                 for agent in self.writers_copy:
-                    hypothesis = agent.act(blocking=False, turn_timeout=60) #420
+                    hypothesis = agent.act(blocking=False, turn_timeout=500)
                     if hypothesis is not None:
                         # self.hypotheses.append(hypothesis)
                         # self.writers_copy.remove(agent)
@@ -234,7 +234,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                 # Ranking entailments
                 # Show entailment set         
                 for agent in self.evaluators_ent:
-                    evaluation = agent.act(blocking=False, turn_timeout=60)#300
+                    evaluation = agent.act(blocking=False, turn_timeout=300)#300
                     if evaluation is not None:
                         if 'incomplete' in evaluation:
                             agent.observe(self.incomplete_message)
@@ -260,7 +260,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 # Show contradiction set
                 for agent in self.evaluators_cont:
-                    evaluation2 = agent.act(blocking=False, turn_timeout=60)#300
+                    evaluation2 = agent.act(blocking=False, turn_timeout=300)#300
                     if evaluation2 is not None:
                         if 'incomplete' in evaluation2:
                             agent.observe(self.incomplete_message)
@@ -286,7 +286,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 # Show neutral set
                 for agent in self.evaluators_neut:
-                    evaluation3 = agent.act(blocking=False, turn_timeout=60)#300
+                    evaluation3 = agent.act(blocking=False, turn_timeout=300)#300
                     if evaluation3 is not None:
                         if 'incomplete' in evaluation3:
                             agent.observe(self.incomplete_message)
@@ -576,7 +576,6 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                 agents[i].observe({'id':'And these are your bonuses for the claims you wrote in Phase 1', 'text':text, 'task_data': {'respond_with_form':[], 'feedback':True}})
 
     def episode_done(self):
-        self.review_work()
         return self.episodeDone
 
     def shutdown(self):
