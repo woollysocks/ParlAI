@@ -60,6 +60,7 @@ def main():
         task_directory_path=os.path.dirname(os.path.abspath(__file__))
     )
 
+    onboard_role_index = 0
     role_index = 0
 
     # Create an onboard_function, which will be run for workers who have
@@ -67,18 +68,21 @@ def main():
     # queue for a task world.
     onboarded_workers = []
     def run_onboard(worker):
-        nonlocal role_index
-        role = mturk_agent_roles[role_index % len(mturk_agent_roles)]
-        role_index += 1
+        nonlocal onboard_role_index
+        role = "Onboard_role" + str(onboard_role_index) # mturk_agent_roles[role_index % len(mturk_agent_roles)]
+        onboard_role_index += 1
         worker.update_agent_id('Onboarding {}'.format(role))
-        worker.demo_role = role
+        worker.onboard_demo_role = role
         world = OnboardingWorld(opt=opt, mturk_agent=worker)
-        if worker not in onboarded_workers:
+        if worker.worker_id not in onboarded_workers:
             while not world.episode_done():
                 onboard_test = world.parley()
-            # self.onboarded_workers.append(worker)
+            if onboard_test['episode_done'] == False:
+                onboarded_workers.append(worker.worker_id)
+        else:
+            onboard_test = {'episode_done': False}
+        print('Workers onboarded:', onboarded_workers)
         world.shutdown()
-        # import pdb; pdb.set_trace()
         return world.prep_save_data([worker]), onboard_test['episode_done']
 
     # If we want to use the above onboard function, we can replace the below
@@ -116,9 +120,11 @@ def main():
             filled_roles = []
             use_workers = []
             for worker in workers:
-                if worker.demo_role not in filled_roles:
+                if worker.onboard_demo_role not in filled_roles:
                     use_workers.append(worker)
-                    filled_roles.append(worker.demo_role)
+                    filled_roles.append(worker.onboard_demo_role)
+                # else:
+                #     import pdb; pdb.set_trace()
             return use_workers
 
         eligibility_function = {'func': check_workers_eligibility, 'multiple': True}
@@ -129,7 +135,13 @@ def main():
         # which is useful for having tasks with different possible worker
         # counts.
         def assign_worker_roles(workers):
+            nonlocal role_index
             for worker in workers:
+                role = mturk_agent_roles[role_index % len(mturk_agent_roles)]
+                role_index += 1
+                worker.update_agent_id('Onboarding {}'.format(role))
+                worker.demo_role = role
+
                 worker.id = worker.demo_role
 
         # Define the task function, which will be run with workers that are
