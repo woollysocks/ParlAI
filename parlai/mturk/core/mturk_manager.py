@@ -140,6 +140,8 @@ class MTurkManager:
         self.is_sandbox = opt['is_sandbox']
         self.agent_pool_change_condition = threading.Condition()
         self.onboard_function = None
+        # self.onboard_reject = []
+        # self.live_hits = 0
         self.num_conversations = opt['num_conversations']
 
         # Determine the correct number of hits to be launching
@@ -703,10 +705,14 @@ class MTurkManager:
 
         mturk_event_type = pkt.data['text']
         if mturk_event_type == SNS_ASSIGN_RETURNED:
+            print("ok, returned.")
+            print(agent.get_status())
             agent.hit_is_returned = True
             # Treat as a socket_dead event
             self._on_socket_dead(agent.worker_id, assignment_id)
-            self.create_additional_hits(3)
+            if agent.is_in_task() and agent.worker_id not in self.agent_pool:
+                if agent.get_status() != "partner disconnect":
+                    self.create_additional_hits(3)
         elif mturk_event_type == SNS_ASSIGN_ABANDONDED:
             agent.set_hit_is_abandoned()
             agent.hit_is_returned = True
@@ -816,7 +822,9 @@ class MTurkManager:
 
             # once onboarding is done, move into a waiting world
             if move_to_waiting == False:
-                # Worker failed onboarding, was removed from the HIT, and a new HIT should be cerated to replace them
+                # Worker failed onboarding, was removed from the HIT. The HIT has been relaunched (somewhere else...)
+                print("ok, hit return because of onboarding fail")
+                # self.live_hits -= 1
                 self.create_additional_hits(1)
             else:
                 self._move_agents_to_waiting([mturk_agent])
@@ -1412,7 +1420,9 @@ class MTurkManager:
         # Send the disconnect event to all workers in the convo
         self._handle_agent_disconnect(worker_id, assign_id)
 
-        # self.create_additional_hits(1)
+        agent = self.worker_manager._get_agent(worker_id, assign_id)
+        # if agent in self.agent_pool:
+        #     self.onboard_reject = [worker_id]
 
     def send_message(
         self, receiver_id, assignment_id, data, blocking=True, ack_func=None
@@ -1623,8 +1633,10 @@ class MTurkManager:
         """Handle creation for a specific number of hits/assignments
         Put created HIT ids into the hit_id_list
         """
-        print("ok HITs being created")
+        print("ok, ", num_hits, " HITs being created")
         shared_utils.print_and_log(logging.INFO, 'Creating {} hits...'.format(num_hits))
+        # self.live_hits += num_hits
+        # print("Num live hits = ", self.live_hits)
 
         qualifications = self.get_qualification_list(qualifications)
 

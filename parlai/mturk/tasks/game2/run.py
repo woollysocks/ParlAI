@@ -123,8 +123,6 @@ def main():
                 if worker.onboard_demo_role not in filled_roles:
                     use_workers.append(worker)
                     filled_roles.append(worker.onboard_demo_role)
-                # else:
-                #     import pdb; pdb.set_trace()
             return use_workers
 
         eligibility_function = {'func': check_workers_eligibility, 'multiple': True}

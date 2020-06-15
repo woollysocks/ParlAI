@@ -104,6 +104,7 @@ def check_mturk_balance(balance_needed, is_sandbox):
     balance_needed
     """
     client = get_mturk_client(is_sandbox)
+    print("Amount of money needed: ", balance_needed)
 
     # Test that you can connect to the API by checking your account balance
     # In Sandbox this always returns $10,000

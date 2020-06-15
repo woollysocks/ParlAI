@@ -13,7 +13,7 @@ task_config['frontend_version'] = 1
 On the Amazon Mechanical Turk web site, the HIT title appears in search results,
 and everywhere the HIT is mentioned.
 """
-task_config['hit_title'] = 'Pilot 4 for Textual Entailment Game'
+task_config['hit_title'] = 'Pilot 5 for Textual Entailment Game'
 
 
 """A description includes detailed information about the kind of task the HIT contains.
@@ -39,10 +39,11 @@ task_config[
 ] = '''
 <p>
 	The <a href="https://cds.nyu.edu/" target="_blank">New York University Center for Data Science</a> is collecting your answers to study
-	machine understanding of English. <b>Please read these full instructions before starting work on the HIT</b> and thank you for your help! <i>[This is a pilot for a larger project]</i>
+	machine understanding of English. <b>Please read these full instructions before starting work on the HIT</b> and thank you for your help! <i>[This is a pilot for a larger project. Feedback is very welcome!]</i>
 </p>
 
-There are two phases in each HIT: the <b>writing phase</b> and the <b>evaluating phase</b>. Each HIT has 4 people on it, and you will be paired with one person. Because you're working in teams of 4, <b>please be warned that you might have to wait for someone else to complete their task during the HIT.</b> We are going to ensure that you're paid for the wait times as well. You also have limited time to complete each task so as to limit waiting time.<br>
+There are two phases in each HIT (and 3 rounds): the <b>writing phase</b> and the <b>evaluating phase</b>. Each HIT has 4 people on it, and you will be paired with one person. Because you're working in teams of 4, <b>please be warned that you might have to wait for someone else to complete their task during the HIT.</b> We are going to ensure that you're paid for the wait times as well. You also have limited time to complete each task so as to limit waiting time.<br><br>
+<b>We estimate that a full HIT will take 20 minutes.</b><br>
 
 <h4><u>Phase 1: Writing</u></h4>
 <p> You, and your partner, will be shown a prompt that describes a situation or event. Using only this description and what you know about the world, please write</p>

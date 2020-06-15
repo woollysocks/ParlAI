@@ -322,6 +322,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                 writer_feedback = []
                 evaluator_feedback = []
+                worker_bonuses = {key: 0.0 for key in self.agents}
                 setnum = itertools.cycle(range(len(self.sets)))
                 next(setnum)
                 for j in self.sets.keys():
@@ -344,13 +345,11 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                         writer_bonus_message = {'id': label, 'text': 'You ranked 1st! Bonus = $' + str(self.writer_bonus) +'.'}
                         writer_rank2_message = {'id': label, 'text': 'Unfortunately, you ranked 2nd.'}
-                        # writer_nobonus_message = {'id':'No bonus', 'text':'Unfortunately you ranked 2nd on all 3 claims.'}
                         noagrm_bonus_message = {'id': label, 'text': 'The evaluators did not agree. Bonus = $' + str(self.ranker_bonus) + '.'} # Set as ranker_bonus to avoid incentivizing workers to always disagree on ranking
                         writer_incomplete_message = {'id': label, 'text': 'Unfortunately both evaluators timed out and did not submit rankings.'}
                         
                         agrm_bonus_message = {'id': label, 'text': 'You agreed with the other evaluator! Bonus = $' + str(self.ranker_bonus) + '.'}
                         noagrm_nobonus_message = {'id': label, 'text': 'You and the other ranker disagreed on the ranking.'}
-                        # eval_nobonus_message = {'id': 'No bonus', 'text': 'Unfortunately you disagreed with the other evaluator on all 3 sets.'}
                         eval_you_incomplete = {'id': label, 'text': 'Unfortunately you timed out and did not submit a ranking.'}
                         eval_other_incomplete = {'id': label, 'text': 'Unfortunately the other evaluator timed out and did not submit a ranking.'}
 
@@ -386,12 +385,15 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                                 agrm_rate += 1
                                 for evaluator in evaluators:
                                     evaluator_feedback.append((evaluator, agrm_bonus_message))
+                                    worker_bonuses[evaluator] += self.ranker_bonus
                                 if rankings[0]['text'] == 'Claim 1':
                                     writer_feedback.append((writers[0], writer_bonus_message))
+                                    worker_bonuses[writers[0]] += self.writer_bonus
                                     writer_feedback.append((writers[1], writer_rank2_message))
                                     w0_rank += 1
                                 else:
                                     writer_feedback.append((writers[1], writer_bonus_message))
+                                    worker_bonuses[writers[1]] += self.writer_bonus
                                     writer_feedback.append((writers[0], writer_rank2_message))
                                     w1_rank += 1
                         else:
@@ -399,6 +401,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                             ## Tell writers
                             for writer in writers:
                                 writer_feedback.append((writer, noagrm_bonus_message))
+                                worker_bonuses[writers[1]] += self.ranker_bonus
                                 w0_rank += 1
                                 w1_rank +=1
                             ## Tell rankers
@@ -443,10 +446,15 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                     writer_i_feedback[i] = [writer_feedback[j][1] if writer_feedback[j][0] == writer else None for j in range(len(writer_feedback))]
                 self.give_feedback(writer_i_feedback, self.agents, writing=True)
 
+                time.sleep(5)
+                for agent in self.agents:
+                    agent.observe({"id":"Your total bonus for this round is", 
+                                  "text":"$"+str(worker_bonuses[agent])+" (the bonus is not instantaneous but it will be sent within 24hrs.)"})
+
                 # Organize data for future nikita
                 label_types = ['entailment', 'contradiction', 'neutral']
-                data_dump = pd.DataFrame(columns=['label', 'prompt', 'claim-1', 'claim-2', 'claim1-val-p1', 
-                    'claim1-val-p2', 'claim2-val-p1', 'claim2-val-p2', 'rank-p1', 'rank-p2', 'expl-p1', 'expl-p2'])
+                # data_dump = pd.DataFrame(columns=['label', 'prompt', 'claim-1', 'claim-2', 'claim1-val-p1', 'claim1-val-p2', 'claim2-val-p1', 'claim2-val-p2', 'rank-p1', 'rank-p2', 'expl-p1', 'expl-p2', 'eval-p1', 'eval-p2', 'p1', 'p2', 'workers'])
+                data_dump = []
                 worker_ids = [(agent.demo_role, agent.worker_id) for agent in self.agents]
                 for i, evals in enumerate(self.evals):
                     done = []
@@ -469,8 +477,8 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
                             this_data['claim-2'] = hypothesis_types[i][(setnum*2)+1]['text']
 
                             eval_persons = persons[((setnum+1)%2)*2:(((setnum+1)%2)*2)+2]
-                            this_data['eval_p1'] = eval_persons[0]
-                            this_data['eval_p2'] = eval_persons[1]
+                            this_data['eval-p1'] = eval_persons[0]
+                            this_data['eval-p2'] = eval_persons[1]
                             eval_p1 = list(filter(lambda x: x['id']==eval_persons[0], evals))[0]
                             eval_p2 = list(filter(lambda x: x['id']==eval_persons[1], evals))[0]
                             this_data['claim1-val-p1'] = eval_p1['task_data2']
@@ -483,13 +491,12 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
 
                             this_data['expl-p1'] = eval_p1['task_data']
                             this_data['expl-p2'] = eval_p2['task_data']
-
                             this_data['workers'] = worker_ids
 
-                            df2 = pd.DataFrame.from_dict([this_data], orient='columns')
-                            data_dump = pd.concat([data_dump, df2], sort=False)
+                            data_dump.append(this_data)
 
-                data_dump = data_dump.reset_index(drop=True)
+                data_dump = pd.DataFrame(data_dump)
+                print(data_dump)
                 self.interim_data.append(data_dump.to_dict()) # dict so we don't require pickling
 
                 # Pause before moving to next prompt
