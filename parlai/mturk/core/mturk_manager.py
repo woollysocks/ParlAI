@@ -710,9 +710,9 @@ class MTurkManager:
             agent.hit_is_returned = True
             # Treat as a socket_dead event
             self._on_socket_dead(agent.worker_id, assignment_id)
-            if agent.is_in_task() and agent.worker_id not in self.agent_pool:
-                if agent.get_status() != "partner disconnect":
-                    self.create_additional_hits(3)
+            # if agent.is_in_task() and agent.worker_id not in self.agent_pool:
+            #     if agent.get_status() != "partner disconnect":
+            #         self.create_additional_hits(3)
         elif mturk_event_type == SNS_ASSIGN_ABANDONDED:
             agent.set_hit_is_abandoned()
             agent.hit_is_returned = True
@@ -822,9 +822,8 @@ class MTurkManager:
 
             # once onboarding is done, move into a waiting world
             if move_to_waiting == False:
-                # Worker failed onboarding, was removed from the HIT. The HIT has been relaunched (somewhere else...)
+                # Worker failed onboarding, was removed from the HIT. The HIT has been relaunched
                 print("ok, hit return because of onboarding fail")
-                # self.live_hits -= 1
                 self.create_additional_hits(1)
             else:
                 self._move_agents_to_waiting([mturk_agent])
@@ -1698,15 +1697,15 @@ class MTurkManager:
                 num_hits=self.required_hits, qualifications=qualifications
             )
         else:
-            # mturk_page_url = self.create_additional_hits(
-            #     num_hits=min(self.required_hits, self.opt['max_connections']),
-            #     qualifications=qualifications,
-            # )
-            # To-do: fix this hack and ensure enough HITs are always requested
             mturk_page_url = self.create_additional_hits(
-                num_hits=self.opt['max_connections'],
+                num_hits=min(self.required_hits, self.opt['max_connections']),
                 qualifications=qualifications,
             )
+            # To-do: fix this hack and ensure enough HITs are always requested
+            # mturk_page_url = self.create_additional_hits(
+            #     num_hits=self.opt['max_connections'],
+            #     qualifications=qualifications,
+            # )
 
         shared_utils.print_and_log(
             logging.INFO, 'Link to HIT: {}\n'.format(mturk_page_url), should_print=True
