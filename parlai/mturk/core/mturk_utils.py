@@ -130,7 +130,9 @@ def check_mturk_balance(balance_needed, is_sandbox):
             'to https://requester.mturk.com/account and increase your balance '
             'to at least ${}, and then try again.'.format(balance_needed)
         )
-        return False
+        #return False
+        # Using a post-payment now.
+        return True
     else:
         return True
 
@@ -369,6 +371,7 @@ def expire_hit(is_sandbox, hit_id):
     client = get_mturk_client(is_sandbox)
     # Update expiration to a time in the past, the HIT expires instantly
     past_time = datetime(2015, 1, 1)
+    import pdb; pdb.set_trace()
     client.update_expiration_for_hit(HITId=hit_id, ExpireAt=past_time)
 
 
