@@ -650,7 +650,7 @@ class MultiRoleAgentWorld(MTurkTaskWorld):
         # Can review the work here to accept or reject it
         for agent in self.agents:
             agent.approve_work()
-            agent.pay_bonus(self.hit_bonus[agent], "For work on the 2-person textual entailment game.")
+            agent.pay_bonus(round(self.hit_bonus[agent]), "For work on the 2-person textual entailment game.")
         pass
 
     def get_custom_task_data(self):
