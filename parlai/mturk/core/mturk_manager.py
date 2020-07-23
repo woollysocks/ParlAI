@@ -974,8 +974,8 @@ class MTurkManager:
                 ''.format(self.hit_mult, fin_word),
                 should_print=True,
             )
-        input('Please press Enter to continue... ')
-        shared_utils.print_and_log(logging.NOTSET, '', True)
+        # input('Please press Enter to continue... ')
+        # shared_utils.print_and_log(logging.NOTSET, '', True)
 
         if self.opt['local'] is True:
             shared_utils.print_and_log(
@@ -1026,9 +1026,10 @@ class MTurkManager:
                 ),
                 should_print=True,
             )
-            check = input('Enter here: ')
-            if check != confirm_string and ('$' + check) != confirm_string:
-                raise SystemExit('Cancelling')
+            # Temporarily removing check, we are post-paying.
+            #check = input('Enter here: ')
+            #if check != confirm_string and ('$' + check) != confirm_string:
+            #    raise SystemExit('Cancelling')
 
         # Check to see if there are any additional notices on the parlai site
         if not self.is_test:
