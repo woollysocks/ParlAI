@@ -124,17 +124,19 @@ def check_mturk_balance(balance_needed, is_sandbox):
         else:
             raise
 
-    if user_balance < balance_needed:
-        print(
-            'You might not have enough money in your MTurk account. Please go '
-            'to https://requester.mturk.com/account and increase your balance '
-            'to at least ${}, and then try again.'.format(balance_needed)
-        )
-        #return False
-        # Using a post-payment now.
-        return True
-    else:
-        return True
+    # if user_balance < balance_needed:
+    #     print(
+    #         'You might not have enough money in your MTurk account. Please go '
+    #         'to https://requester.mturk.com/account and increase your balance '
+    #         'to at least ${}, and then try again.'.format(balance_needed)
+    #     )
+    #     return False
+    
+    # else:
+    #     return True
+
+    # Using a post-payment now.
+    return True
 
 
 def create_hit_config(opt, task_description, unique_worker, is_sandbox):
@@ -282,7 +284,7 @@ def create_hit_type(
     assignment_duration_in_seconds,
     is_sandbox,
     qualifications=None,
-    auto_approve_delay=7 * 24 * 3600,  # default 1 week
+    auto_approve_delay=1 * 24 * 3600,  # default 1 day
 ):
     """Create a HIT type to be used to generate HITs of the requested params"""
     client = get_mturk_client(is_sandbox)

@@ -28,7 +28,7 @@ def main():
 
     # Set the task name to be the folder name
     opt['task'] = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
-    opt['assignment_duration_in_seconds'] = 10000
+    opt['assignment_duration_in_seconds'] = 60*60 # 1 hour to complete an assigment
 
     # append the contents of task_config.py to the configuration
     opt.update(task_config)
