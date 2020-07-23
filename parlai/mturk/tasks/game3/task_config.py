@@ -43,7 +43,7 @@ task_config[
 </p>
 
 There are two phases in each HIT (and 3 rounds): the <b>writing phase</b> and the <b>evaluating phase</b>. Each HIT has 2 people on it. Because you're working in teams of 2, <b>please be warned that you might have to wait for someone else to complete their task during the HIT.</b> You also have limited time to complete each task so as to limit waiting time.<br><br>
-<b>We estimate that a full HIT will take 10-15 minutes.</b><br>
+<b>We estimate that a full HIT will take about 15 minutes.</b><br>
 
 <h4><u>Phase 1: Writing</u></h4>
 <p> You, and your partner, will be shown a prompt that describes a situation or event. Using only this description and what you know about the world, please write</p>
